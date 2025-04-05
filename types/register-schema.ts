@@ -9,3 +9,5 @@ export const RegisterSchema = z.object({
     .string()
     .min(4, { message: "Please add name with at least 4 characters" }),
 });
+
+export type zRegisterSchema = z.infer<typeof RegisterSchema>;

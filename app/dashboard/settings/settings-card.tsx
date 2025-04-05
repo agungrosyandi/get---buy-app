@@ -23,6 +23,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import { Input } from "@/components/ui/input";
 import { Session } from "next-auth";
 import { SettingSchema } from "@/types/settings-schema";
@@ -34,6 +46,8 @@ import { useState } from "react";
 import { useAction } from "next-safe-action/hooks";
 import { settings } from "@/server/actions/settings";
 import { UploadButton } from "@/app/api/uploadthing/upload";
+import { signOut } from "next-auth/react";
+import { DeleteAccount } from "@/server/actions/delete-account";
 
 type SettingForm = {
   session: Session;
@@ -45,6 +59,9 @@ export default function SettingsCard(session: SettingForm) {
 
   const [avatarUploading, setAvatarUploading] = useState(false);
   console.log(session.session.user);
+
+  // form schema zod -------------------------------------------------
+
   const form = useForm<z.infer<typeof SettingSchema>>({
     resolver: zodResolver(SettingSchema),
     defaultValues: {
@@ -57,6 +74,20 @@ export default function SettingsCard(session: SettingForm) {
     },
   });
 
+  // delete account and ussers -------------------------------------------------
+
+  async function deleteUserAccount(id: string) {
+    const data = await DeleteAccount({ id });
+
+    if (!data) {
+      return new Error("No Data Found");
+    }
+
+    return;
+  }
+
+  // excecute actions form ------------------------------------------
+
   const { execute, status } = useAction(settings, {
     onSuccess: (data) => {
       if (data.data?.success) setSuccess(data.data.success);
@@ -68,9 +99,13 @@ export default function SettingsCard(session: SettingForm) {
     },
   });
 
+  // excecute actions form submit ------------------------------------------
+
   const onSubmit = (values: z.infer<typeof SettingSchema>) => {
     execute(values);
   };
+
+  // main component ------------------------------------------
 
   return (
     <Card>
@@ -112,7 +147,6 @@ export default function SettingsCard(session: SettingForm) {
               name="image"
               render={() => (
                 <FormItem>
-                  <FormLabel>Avatar</FormLabel>
                   <div className="flex items-center gap-4">
                     {!form.getValues("image") && (
                       <div className="font-bold">
@@ -243,12 +277,55 @@ export default function SettingsCard(session: SettingForm) {
             <FormError message={error} />
             <FormSuccess message={success} />
 
-            <Button
-              disabled={status === "executing" || avatarUploading}
-              type="submit"
-            >
-              Update your setting
-            </Button>
+            <div className="flex flex-col gap-2 items-start">
+              {/* update account & user setting ------------------------------------------- */}
+
+              <Button
+                disabled={status === "executing" || avatarUploading}
+                type="submit"
+              >
+                Update your setting
+              </Button>
+
+              <span>or</span>
+
+              {/* delete account & user ------------------------------------------- */}
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">Delete Accout</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      your account and remove your data from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        if (!session.session.user.id) {
+                          console.log("User ID not found");
+                          return;
+                        }
+                        deleteUserAccount(session.session.user.id);
+
+                        signOut();
+
+                        return;
+                      }}
+                    >
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </form>
         </Form>
       </CardContent>

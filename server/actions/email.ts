@@ -1,3 +1,5 @@
+// important dont forget to put this "use server" ---------------------------------
+
 "use server";
 
 import getBaseURL from "@/lib/base-url";

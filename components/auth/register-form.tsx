@@ -13,19 +13,20 @@ import {
 import AuthCard from "./auth-card";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useAction } from "next-safe-action/hooks";
 import { cn } from "@/lib/utils";
-import { RegisterSchema } from "@/types/register-schema";
+import { RegisterSchema, zRegisterSchema } from "@/types/register-schema";
 import { emailRegister } from "@/server/actions/email-register";
 import { useState } from "react";
 import FormSuccess from "./form-success";
 import FormError from "./form-error";
 
 export default function RegisterForm() {
-  const form = useForm<z.infer<typeof RegisterSchema>>({
+  //  form schema  ---------------------------------------------
+
+  const form = useForm<zRegisterSchema>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
       email: "",
@@ -34,8 +35,13 @@ export default function RegisterForm() {
     },
   });
 
+  // state hook --------------------------------------------------------------
+
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
+
+  // excecute server action & add to database ------------------------------------
+
   const { execute, status } = useAction(emailRegister, {
     onSuccess(data) {
       if (data.data?.error) setError(data.data?.error);
@@ -43,9 +49,13 @@ export default function RegisterForm() {
     },
   });
 
-  const onSubmit = (value: z.infer<typeof RegisterSchema>) => {
+  // excecute submit form --------------------------------------------
+
+  const onSubmit = (value: zRegisterSchema) => {
     execute(value);
   };
+
+  // form component  --------------------------------------------
 
   return (
     <AuthCard

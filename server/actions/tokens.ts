@@ -1,3 +1,5 @@
+// important dont forget to put this "use server" ---------------------------------
+
 "use server";
 
 import { eq } from "drizzle-orm";

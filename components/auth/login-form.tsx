@@ -20,8 +20,7 @@ import {
 import AuthCard from "./auth-card";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema } from "@/types/login-schema";
-import * as z from "zod";
+import { LoginSchema, zLoginSchema } from "@/types/login-schema";
 import { Input } from "../ui/input";
 import Link from "next/link";
 import { Button } from "../ui/button";
@@ -33,7 +32,9 @@ import FormSuccess from "./form-success";
 import FormError from "./form-error";
 
 export default function LoginForm() {
-  const form = useForm<z.infer<typeof LoginSchema>>({
+  //  form schema  ---------------------------------------------
+
+  const form = useForm<zLoginSchema>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
       email: "",
@@ -41,24 +42,27 @@ export default function LoginForm() {
     },
   });
 
+  // state hook --------------------------------------------------------------
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showToFactor, setShowToFactor] = useState(false);
+
+  // excecute server action & add to database ------------------------------------
 
   const { execute, status } = useAction(EmailSign, {
     onSuccess(data) {
       if (data?.data?.error) setError(data.data.error);
       if (data?.data?.success) setSuccess(data.data.success);
-
-      if (data.data?.twoFactor) {
-        setShowToFactor(true);
-      }
+      if (data.data?.twoFactor) setShowToFactor(true);
     },
   });
 
-  const onSubmit = (value: z.infer<typeof LoginSchema>) => {
-    execute(value);
-  };
+  // excecute submit form --------------------------------------------
+
+  const onSubmit = (value: zLoginSchema) => execute(value);
+
+  // form component  --------------------------------------------
 
   return (
     <AuthCard
@@ -67,7 +71,7 @@ export default function LoginForm() {
       backButtonLabel="Create a New Account"
       showSocial
     >
-      <div>
+      <>
         <Form {...form}>
           <form action="" onSubmit={form.handleSubmit(onSubmit)}>
             <div>
@@ -170,7 +174,7 @@ export default function LoginForm() {
             </Button>
           </form>
         </Form>
-      </div>
+      </>
     </AuthCard>
   );
 }

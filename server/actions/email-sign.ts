@@ -1,3 +1,5 @@
+// important dont forget to put this "use server" ---------------------------------
+
 "use server";
 
 import { LoginSchema } from "@/types/login-schema";
@@ -20,6 +22,8 @@ export const EmailSign = actionClient
   .schema(LoginSchema)
   .action(async ({ parsedInput: { email, password, code } }) => {
     try {
+      // find valid verified email -------------------------------------
+
       const existingUser = await db.query.users.findFirst({
         where: eq(users.email, email),
       });
